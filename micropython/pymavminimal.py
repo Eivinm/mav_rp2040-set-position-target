@@ -240,6 +240,8 @@ MAVLINK_MSG_ID_NAMED_VALUE_FLOAT = 251
 MAVLINK_MSG_ID_NAMED_VALUE_INT = 252
 MAVLINK_MSG_ID_STATUSTEXT = 253
 MAVLINK_MSG_ID_SCALED_IMU = 26
+MAVLINK_MSG_ID_SET_POSITION_TARGET_LOCAL_NED = 84
+MAVLINK_MSG_ID_SET_POSITION_TARGET_GLOBAL_INT = 86
 
 class MAVError(Exception):
         '''MAVLink error class'''
@@ -613,7 +615,53 @@ class MAVLink(object):
 
                 '''
                 return self.send(self.heartbeat_encode(type, autopilot, base_mode, custom_mode, system_status, mavlink_version), force_mavlink1=force_mavlink1)
-                
+        
+        def set_position_target_local_ned_encode(self, time_boot_ms, target_system, target_component, coordinate_frame, type_mask, x, y, z, vx, vy, vz, afx, afy, afz, yaw, yaw_rate):
+                '''
+                Set the vehicle's position and velocity in local NED coordinates. This message is used to set the vehicle's position and velocity in local NED coordinates. The coordinate frame is defined by the MAV_FRAME enum. The type_mask field can be used to specify which fields are to be ignored by the vehicle. The type_mask field is a bitmask, where each bit corresponds to a field in the message. A value of 1 means that the field should be ignored, while a value of 0 means that the field should be used. For example, if you want to set the vehicle's position and velocity, but ignore the yaw and yaw_rate fields, you would set type_mask to 0x00000003 (binary 00000011). This message is documented at https://mavlink.io/en/messages/common.html
+                time_boot_ms              : Timestamp (time since system boot). [ms] (type:uint32_t)
+                target_system             : System ID (type:uint8_t)
+                target_component          : Component ID (type:uint8_t)
+                coordinate_frame          : Coordinate frame. (type:uint8_t, values:MAV_FRAME)
+                type_mask                 : Bitmask to indicate which dimensions should be ignored. (type:uint32_t)
+                x                         : X position in meters. (type:float)
+                y                         : Y position in meters. (type:float)
+                z                         : Z position in meters. (type:float)
+                vx                        : X velocity in meters/second. (type:float)
+                vy                        : Y velocity in meters/second. (type:float)
+                vz                        : Z velocity in meters/second. (type:float)
+                afx                       : X acceleration or force in meters/second^2 or N. (type:float)
+                afy                       : Y acceleration or force in meters/second^2 or N. (type:float)
+                afz                       : Z acceleration or force in meters/second^2 or N. (type:float)
+                yaw                       : Yaw angle in radians. (type:float)
+                yaw_rate                  : Yaw rate in radians/second. (type:float)
+
+                '''
+                return MAVLink_set_position_target_local_ned_message(time_boot_ms, target_system, target_component, coordinate_frame, type_mask, x, y, z, vx, vy, vz, afx, afy, afz, yaw, yaw_rate)
+
+        def set_position_target_global_int_encode(self, time_boot_ms, target_system, target_component, coordinate_frame, type_mask, lat_int, lon_int, alt, vx, vy, vz, afx, afy, afz, yaw, yaw_rate):
+                '''
+                Set the vehicle's position and velocity in global coordinates. This message is used to set the vehicle's position and velocity in global coordinates. The coordinate frame is defined by the MAV_FRAME enum. The type_mask field can be used to specify which fields are to be ignored by the vehicle. The type_mask field is a bitmask, where each bit corresponds to a field in the message. A value of 1 means that the field should be ignored, while a value of 0 means that the field should be used. For example, if you want to set the vehicle's position and velocity, but ignore the yaw and yaw_rate fields, you would set type_mask to 0x00000003 (binary 00000011). This message is documented at https://mavlink.io/en/messages/common.html
+                time_boot_ms              : Timestamp (time since system boot). [ms] (type:uint32_t)
+                target_system             : System ID (type:uint8_t)
+                target_component          : Component ID (type:uint8_t)
+                coordinate_frame          : Coordinate frame. (type:uint8_t, values:MAV_FRAME)
+                type_mask                 : Bitmask to indicate which dimensions should be ignored. (type:uint32_t)
+                lat_int                   : Latitude in degrees * 1E7. (type:int32_t)
+                lon_int                   : Longitude in degrees * 1E7. (type:int32_t)
+                alt                       : Altitude in meters AMSL. (type:float)
+                vx                        : X velocity in meters/second. (type:float)
+                vy                        : Y velocity in meters/second. (type:float)
+                vz                        : Z velocity in meters/second. (type:float)
+                afx                       : X acceleration or force in meters/second^2 or N. (type:float)
+                afy                       : Y acceleration or force in meters/second^2 or N. (type:float)
+                afz                       : Z acceleration or force in meters/second^2 or N. (type:float)
+                yaw                       : Yaw angle in radians. (type:float)
+                yaw_rate                  : Yaw rate in radians/second. (type:float)
+
+                '''
+                return MAVLink_set_position_target_global_int_message(time_boot_ms, target_system, target_component, coordinate_frame, type_mask, lat_int, lon_int, alt, vx, vy, vz, afx, afy, afz, yaw, yaw_rate)
+
 class MAVLink_named_value_float_message(MAVLink_message):
         '''
         Send a key-value pair as float. The use of this message is
@@ -1332,6 +1380,107 @@ class MAVLink_system_time_message(MAVLink_message):
         def pack(self, mav, force_mavlink1=False):
                 return MAVLink_message.pack(self, mav, 137, struct.pack('<QI', self.time_unix_usec, self.time_boot_ms), force_mavlink1=force_mavlink1)
 
+class MAVLink_set_position_target_local_ned_message(MAVLink_message):
+    '''
+    Sets a desired vehicle position in a local north-east-down
+    coordinate frame. Used by an external controller to command the
+    vehicle (manual controller or other system).
+    '''
+
+    id = MAVLINK_MSG_ID_SET_POSITION_TARGET_LOCAL_NED
+    msg = 'SET_POSITION_TARGET_LOCAL_NED'
+    fieldnames = ['time_boot_ms', 'target_system', 'target_component', 'coordinate_frame', 'type_mask', 'x', 'y', 'z', 'vx', 'vy', 'vz', 'afx', 'afy', 'afz', 'yaw', 'yaw_rate']
+    ordered_fieldnames = ['time_boot_ms', 'x', 'y', 'z', 'vx', 'vy', 'vz', 'afx', 'afy', 'afz', 'yaw', 'yaw_rate', 'type_mask', 'target_system', 'target_component', 'coordinate_frame']
+    fieldtypes = ['uint32_t', 'uint8_t', 'uint8_t', 'uint8_t', 'uint16_t', 'float', 'float', 'float', 'float', 'float', 'float', 'float', 'float', 'float', 'float', 'float']
+    fielddisplays_by_name = {"type_mask": "bitmask"}
+    fieldenums_by_name = {"coordinate_frame": "MAV_FRAME", "type_mask": "POSITION_TARGET_TYPEMASK"}
+    fieldunits_by_name = {"time_boot_ms": "ms", "x": "m", "y": "m", "z": "m", "vx": "m/s", "vy": "m/s", "vz": "m/s", "afx": "m/s/s", "afy": "m/s/s", "afz": "m/s/s", "yaw": "rad", "yaw_rate": "rad/s"}
+    format = '<IfffffffffffHBBB'
+    native_format = bytearray('<IfffffffffffHBBB', 'ascii')
+    orders = [0, 13, 14, 15, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    lengths = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    array_lengths = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    crc_extra = 143
+    unpacker = '<IfffffffffffHBBB'
+    instance_field = None
+    instance_offset = -1
+
+    def __init__(self, time_boot_ms, target_system, target_component, coordinate_frame, type_mask, x, y, z, vx, vy, vz, afx, afy, afz, yaw, yaw_rate):
+        MAVLink_message.__init__(self, MAVLink_set_position_target_local_ned_message.id, MAVLink_set_position_target_local_ned_message.msg)
+        self._fieldnames = MAVLink_set_position_target_local_ned_message.fieldnames
+        self._instance_field = MAVLink_set_position_target_local_ned_message.instance_field
+        self._instance_offset = MAVLink_set_position_target_local_ned_message.instance_offset
+        self.time_boot_ms = time_boot_ms
+        self.target_system = target_system
+        self.target_component = target_component
+        self.coordinate_frame = coordinate_frame
+        self.type_mask = type_mask
+        self.x = x
+        self.y = y
+        self.z = z
+        self.vx = vx
+        self.vy = vy
+        self.vz = vz
+        self.afx = afx
+        self.afy = afy
+        self.afz = afz
+        self.yaw = yaw
+        self.yaw_rate = yaw_rate
+
+    def pack(self, mav, force_mavlink1 = False):
+        return MAVLink_message.pack(self, mav, 143, struct.pack('<IfffffffffffHBBB', self.time_boot_ms, self.x, self.y, self.z, self.vx, self.vy, self.vz, self.afx, self.afy, self.afz, self.yaw, self.yaw_rate, self.type_mask, self.target_system, self.target_component, self.coordinate_frame), force_mavlink1=force_mavlink1)
+
+class MAVLink_set_position_target_global_int_message(MAVLink_message):
+    '''
+    Sets a desired vehicle position, velocity, and/or acceleration in
+    a global coordinate system (WGS84). Used by an external controller
+    to command the vehicle (manual controller or other system).
+    '''
+
+    id = MAVLINK_MSG_ID_SET_POSITION_TARGET_GLOBAL_INT
+    msg = 'SET_POSITION_TARGET_GLOBAL_INT'
+    fieldnames = ['time_boot_ms', 'target_system', 'target_component', 'coordinate_frame', 'type_mask', 'lat_int', 'lon_int', 'alt', 'vx', 'vy', 'vz', 'afx', 'afy', 'afz', 'yaw', 'yaw_rate']
+    ordered_fieldnames = ['time_boot_ms', 'lat_int', 'lon_int', 'alt', 'vx', 'vy', 'vz', 'afx', 'afy', 'afz', 'yaw', 'yaw_rate', 'type_mask', 'target_system', 'target_component', 'coordinate_frame']
+    fieldtypes = ['uint32_t', 'uint8_t', 'uint8_t', 'uint8_t', 'uint16_t', 'int32_t', 'int32_t', 'float', 'float', 'float', 'float', 'float', 'float', 'float', 'float', 'float']
+    fielddisplays_by_name = {"type_mask": "bitmask"}
+    fieldenums_by_name = {"coordinate_frame": "MAV_FRAME", "type_mask": "POSITION_TARGET_TYPEMASK"}
+    fieldunits_by_name = {"time_boot_ms": "ms", "lat_int": "degE7", "lon_int": "degE7", "alt": "m", "vx": "m/s", "vy": "m/s", "vz": "m/s", "afx": "m/s/s", "afy": "m/s/s", "afz": "m/s/s", "yaw": "rad", "yaw_rate": "rad/s"}
+    format = '<IiifffffffffHBBB'
+    native_format = bytearray('<IiifffffffffHBBB', 'ascii')
+    orders = [0, 13, 14, 15, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    lengths = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    array_lengths = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    crc_extra = 5
+    unpacker = '<IiifffffffffHBBB'
+    instance_field = None
+    instance_offset = -1
+
+    def __init__(self, time_boot_ms, target_system, target_component, coordinate_frame, type_mask, lat_int, lon_int, alt, vx, vy, vz, afx, afy, afz, yaw, yaw_rate):
+        MAVLink_message.__init__(self, MAVLink_set_position_target_global_int_message.id, MAVLink_set_position_target_global_int_message.msg)
+        self._fieldnames = MAVLink_set_position_target_global_int_message.fieldnames
+        self._instance_field = MAVLink_set_position_target_global_int_message.instance_field
+        self._instance_offset = MAVLink_set_position_target_global_int_message.instance_offset
+        self.time_boot_ms = time_boot_ms
+        self.target_system = target_system
+        self.target_component = target_component
+        self.coordinate_frame = coordinate_frame
+        self.type_mask = type_mask
+        self.lat_int = lat_int
+        self.lon_int = lon_int
+        self.alt = alt
+        self.vx = vx
+        self.vy = vy
+        self.vz = vz
+        self.afx = afx
+        self.afy = afy
+        self.afz = afz
+        self.yaw = yaw
+        self.yaw_rate = yaw_rate
+
+    def pack(self, mav, force_mavlink1 = False):
+        return MAVLink_message.pack(self, mav, 5, struct.pack('<IiifffffffffHBBB', self.time_boot_ms, self.lat_int, self.lon_int, self.alt, self.vx, self.vy, self.vz, self.afx, self.afy, self.afz, self.yaw, self.yaw_rate, self.type_mask, self.target_system, self.target_component, self.coordinate_frame), force_mavlink1=force_mavlink1)
+
+
 mavlink_map = {
         MAVLINK_MSG_ID_AHRS : MAVLink_ahrs_message,
         MAVLINK_MSG_ID_DATA16 : MAVLink_data16_message,
@@ -1351,6 +1500,8 @@ mavlink_map = {
         MAVLINK_MSG_ID_NAMED_VALUE_FLOAT : MAVLink_named_value_float_message,
         MAVLINK_MSG_ID_NAMED_VALUE_INT : MAVLink_named_value_int_message,
         MAVLINK_MSG_ID_STATUSTEXT : MAVLink_statustext_message,
+        MAVLINK_MSG_ID_SET_POSITION_TARGET_LOCAL_NED : MAVLink_set_position_target_local_ned_message,
+        MAVLINK_MSG_ID_SET_POSITION_TARGET_GLOBAL_INT : MAVLink_set_position_target_global_int_message,
 }
 
 # enums

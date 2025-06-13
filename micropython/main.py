@@ -13,37 +13,40 @@ from machine import Pin, Timer, ADC, UART
 import time
 import pymavminimal as pymav
 
-led = Pin(25, Pin.OUT)
+MAV_FRAME_LOCAL_NED = 1
+MAV_FRAME_GLOBAL_INT = 5
+
+led = Pin('LED', Pin.OUT)
 timer = Timer()
 
 uart0 = UART(0, baudrate=57600, tx=Pin(0), rx=Pin(1))
 
-adc3_value = ADC(29)
-adc2_value = ADC(28)
-adc1_value = ADC(27)
-adc0_value = ADC(26)
-conversion_factor = 3.3/(65536) 
 seen_heartbeat = False
 
-def sendFloats(timer):
+#send_count = 0
+
+def sendMessages(timer):
     if seen_heartbeat:
-        #send floats
+        #global send_count
+        
         msgs = []
         msgs.append(mavobj.heartbeat_encode(pymav.MAV_TYPE_ONBOARD_CONTROLLER, 8, 0, 0, 0))
-        msgs.append(mavobj.named_value_float_encode(time.ticks_ms(), "ADC0", adc0_value.read_u16() * conversion_factor))
-        msgs.append(mavobj.named_value_float_encode(time.ticks_ms(), "ADC1", adc1_value.read_u16() * conversion_factor))
-        msgs.append(mavobj.named_value_float_encode(time.ticks_ms(), "ADC2", adc2_value.read_u16() * conversion_factor))
-        msgs.append(mavobj.named_value_float_encode(time.ticks_ms(), "ADC3", adc3_value.read_u16() * conversion_factor))
+        #msgs.append(mavobj.set_position_target_local_ned_encode(time.ticks_ms(), mavobj.srcSystem, mavobj.srcComponent, MAV_FRAME_LOCAL_NED, 0b0000000111111100, 50, 50, -50, 0, 0, 0, 0, 0, 0, 0, 0))
+        msgs.append(mavobj.set_position_target_global_int_encode(time.ticks_ms(), mavobj.srcSystem, mavobj.srcComponent, MAV_FRAME_GLOBAL_INT, 0b0000000111111100, 633200620, 10273286, 20, 0, 0, 0, 0, 0, 0, 0, 0))
+        #send_count += 1
+
         for msg in msgs:
             uart0.write(msg.pack(mavobj))
         print("Sent at {0}".format(time.ticks_ms()))
 
 # Use a timer for sending packets
-timer.init(freq=1, mode=Timer.PERIODIC, callback=sendFloats)
+timer.init(freq=5, mode=Timer.PERIODIC, callback=sendMessages)
 
 # MAVLink
 mavobj = pymav.MAVLink()
 mavobj.robust_parsing = True
+mavobj.srcSystem = 1
+mavobj.srcComponent = 1
 
 # Keep looping to receive data
 while True:
@@ -59,6 +62,6 @@ while True:
                     if not seen_heartbeat:
                         print("Got heartbeat from {0}:{1}".format(pkt.get_srcSystem(), pkt.get_srcComponent()))
                         mavobj.srcSystem = pkt.get_srcSystem()
-                        mavobj.srcComponent = 158 #MAV_COMP_ID_PERIPHERAL
+                        mavobj.srcComponent = pkt.get_srcComponent() #158 #MAV_COMP_ID_PERIPHERAL
                         seen_heartbeat = True
     time.sleep(0.01)
